@@ -27,6 +27,7 @@ def get_axis_aligned_bbox(region):
 
     return cx-w/2, cy-h/2, w, h
 
+# 生成图片序列 
 def get_img_list(img_dir):
     frame_list = []
     for frame in sorted(os.listdir(img_dir)):
@@ -34,11 +35,8 @@ def get_img_list(img_dir):
             frame_list.append(os.path.join(img_dir, frame))
     return frame_list
 
-
+# 读取groundtruth,每行包含8个坐标点
 def get_ground_truthes(img_path):
-    '''
-    读取groundtruth,每行包含8个坐标点
-    '''
     gt_path = os.path.join(img_path, 'groundtruth.txt')
     gts=[]
     with open(gt_path, 'r') as f:
@@ -62,21 +60,21 @@ class PyTracker:
         self.tracker_type=tracker_type
         self.frame_list =get_img_list(img_dir)
         self.frame_list.sort()
-        self.gts=get_ground_truthes(img_dir)
-        self.init_gt=self.gts[0]
+        self.gts=get_ground_truthes(img_dir)  #有点脱裤子放屁的感觉，其实只用到了第一个ground_truth
+        self.init_gt=self.gts[0]     #可能原作者还想量化最后跟踪结果的误差
 
         if self.tracker_type == 'MOSSE':
             self.tracker=MOSSE()
         else:
             raise NotImplementedError
 
-    def tracking(self,verbose=True,video_path=None):
-        poses = []
+    def tracking(self,verbose=True,video_path=None):#这个Video_path指存的地址
+        poses = []  #预测的位置
         init_frame = cv2.imread(self.frame_list[0])
         
         init_gt = np.array(self.init_gt)
         if init_gt.shape[0] != 4:
-            init_gt = get_axis_aligned_bbox(init_gt)
+            init_gt = get_axis_aligned_bbox(init_gt)#如果给的gt不是4个，用来处理这种情况
             print(init_gt)
         x1, y1, w, h =init_gt
         init_gt=tuple(init_gt)
@@ -145,8 +143,8 @@ class PyTracker:
 
 
 def main():
-    tracker = PyTracker('./bicycle', 'MOSSE')
-    tracker.tracking(video_path='bicycle.flv')
+    tracker = PyTracker('Mosse/bicycle', 'MOSSE')
+    tracker.tracking(video_path='Mosse/demo/bicycle1.flv')
 
 if __name__ == '__main__':
     main()

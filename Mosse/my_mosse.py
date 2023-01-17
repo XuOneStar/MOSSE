@@ -6,9 +6,6 @@ Python re-implementation of "Visual Object Tracking using Adaptive Correlation F
   booktitle={Computer Vision & Pattern Recognition},
   year={2010},
 }
-
-Dongmen practices at 2020/3/26.
-
 """
 import numpy as np
 import cv2
@@ -29,16 +26,15 @@ def cos_window(sz):
     return cos_window
 
 
+# 该函数的作用是生成一个sz大小的的高斯核
 def gaussian2d_labels(sz,sigma):
-    '''
-    该函数的作用是生成一个sz大小的的高斯核
-    '''
     w,h=sz
     xs, ys = np.meshgrid(np.arange(w), np.arange(h)) # 根据w, h的值生成一个网格的x，y坐标
     center_x, center_y = w / 2, h / 2
     dist = ((xs - center_x) ** 2 + (ys - center_y) ** 2) / (sigma**2)
     labels = np.exp(-0.5*dist)
     return labels
+
 
 class BaseCF:
     def __init__(self):
@@ -58,17 +54,24 @@ class MOSSE(BaseCF):
         self.sigma=sigma # 高斯变换中的方差
 
     def init(self,first_frame,bbox):
+        #取帧
         if len(first_frame.shape)!=2:
-            assert first_frame.shape[2]==3
+            assert first_frame.shape[2]==3  #保证图片是3个通道进来的
             first_frame=cv2.cvtColor(first_frame,cv2.COLOR_BGR2GRAY) # RGB图片转换成灰度图片
+
+        #用于预处理的初始化
         first_frame=first_frame.astype(np.float32)/255 # 归一化
         x,y,w,h=tuple(bbox) # 取出第一帧中ground truth的坐标值 x,y为框的左上角坐标，w, h为框的大小
         self._center=(x+w/2,y+h/2) # 计算ground truth的中心 
         self.w,self.h=w,h # 获取框的大小
         w,h=int(round(w)),int(round(h)) # round()四舍五入
         self.cos_window=cos_window((w,h))  # 定义汉宁窗 
+
+        #生成G_desired
         self._fi=cv2.getRectSubPix(first_frame,(w,h),self._center) # 从第一帧中截取出检测的目标部分， _fi.shape = (w,h)
         self._G=np.fft.fft2(gaussian2d_labels((w,h),self.sigma)) # 首先生成一个w * h(检测框大小)的高斯核，然后对该高斯核进行傅里叶变换，初始化G
+
+        #生成A_i B_i用来初始化H_i
         self.crop_size=(w,h) # 定义裁剪框的大小 
         self._Ai=np.zeros_like(self._G) # 初始化Ai
         self._Bi=np.zeros_like(self._G) # 初始化Bi
