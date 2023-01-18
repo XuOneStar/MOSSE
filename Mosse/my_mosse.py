@@ -97,7 +97,7 @@ class MOSSE(BaseCF):
         if vis is True:
             self.score=gi
         curr=np.unravel_index(np.argmax(gi, axis=None),gi.shape) # 获取gi中最大值的index，这个位置就是第二帧图像中目标所在
-        dy,dx=curr[0]-(self.h/2),curr[1]-(self.w/2) # 这两个是啥坐标
+        dy,dx=curr[0]-(self.h/2),curr[1]-(self.w/2) 
         x_c,y_c=self._center 
         x_c+=dx
         y_c+=dy
